@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>घर लेखा-जोखा (स्थिर)</title>
+<style>
+:root{--bg:#fffefc;--muted:#475569;--text:#071427;--accent1:#ff7a18;--accent2:#7c3aed;--accent3:#06b6d4;--success:#10b981;--danger:#ef4444;--surface:rgba(7,20,40,0.04)}*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,var(--bg),#f0fbff);color:var(--text);padding:12px}.wrap{max-width:980px;margin:0 auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px}.header-right{display:flex;align-items:center;gap:8px;white-space:nowrap;overflow-x:auto}h1{font-size:1.05rem;margin:0;color:var(--accent2);font-weight:800}.card{background:#ffffff;padding:14px;border-radius:12px;box-shadow:0 12px 30px var(--surface);border:1px solid rgba(124,58,237,0.06);margin-top:12px}.balances{display:flex;gap:12px;flex-wrap:wrap}.balance-item{flex:1;min-width:140px;padding:12px;border-radius:12px;background:linear-gradient(90deg,#fff,#fff7fb);border:1px solid rgba(7,20,40,0.03)}.balance-item h3{margin:0;font-size:0.88rem;color:var(--muted)}.balance-item p{margin:6px 0;font-size:1.06rem;font-weight:800;color:var(--accent3)}form .row{display:flex;gap:10px;flex-wrap:wrap}.filter-form{display:flex;gap:8px;align-items:center}.input-inline{display:flex;gap:8px;align-items:center}input[type=text],input[type=date],select,textarea{background:linear-gradient(180deg,#fff,#fffaf6);border:1px solid rgba(7,20,40,0.04);color:var(--text);padding:10px;border-radius:10px}label{font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px}.btn{display:inline-block;padding:9px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:800}.btn-primary{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white}.btn-ghost{background:transparent;border:1px solid rgba(7,20,40,0.06);color:var(--text);padding:8px 12px;border-radius:10px}.btn-danger{background:linear-gradient(90deg,var(--danger),#ff8a88);color:white}.table-wrapper{overflow:auto;border-radius:8px;margin-top:8px}table{width:100%;border-collapse:collapse;min-width:680px}th,td{padding:10px 12px;text-align:left;border-bottom:1px solid rgba(7,20,40,0.06);font-size:0.98rem;vertical-align:middle}th{color:var(--muted);font-weight:800}.table-small th{font-size:0.78rem;padding:6px 8px}.muted{color:var(--muted)}.right{text-align:right}.small{font-size:0.85rem}.amt-income{color:var(--success);font-weight:800;padding:4px 6px;border-radius:6px}.amt-expense{color:var(--danger);font-weight:800;padding:4px 6px;border-radius:6px}.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(124,58,237,0.08),rgba(6,182,212,0.06));font-size:0.85rem;color:var(--text);border:1px solid rgba(7,20,40,0.03)}.footer{margin-top:18px;color:var(--muted);font-size:0.9rem}.clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}@media (max-width:720px){.balances{flex-direction:column}header{flex-direction:row;align-items:center}.filter-form{flex-direction:column;align-items:stretch}.input-inline{flex-direction:column;align-items:stretch}.header-right{flex-shrink:0}table{min-width:100%;font-size:0.86rem}th,td{padding:8px 8px}td.date, th.date{font-size:0.86rem;white-space:nowrap}td.amount{font-size:0.9rem}td.description{max-width:220px}td.description .clamp-2{max-width:220px}}
+/* login overlay */
+#loginOverlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(7,20,40,0.08),rgba(7,20,40,0.06));display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 12px 32px rgba(13,20,30,0.08);width:360px}
+.login-box input{width:100%;padding:10px;border-radius:10px;border:1px solid #e6eef8}
+.login-box button{margin-top:12px;width:100%;padding:10px;background:linear-gradient(90deg,#ff7a18,#7c3aed);color:white;border:0;border-radius:10px;font-weight:700}
+.login-info{margin-top:8px;color:#64748b;font-size:0.9rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <div><h1>घर लेखा-जोखा (स्थिर)</h1></div>
+        <div class="header-right">
+            <form id="filterForm" class="filter-form" style="display:flex;align-items:center;gap:8px">
+                <select id="viewSelect">
+                    <option value="list">सभी एंट्री</option>
+                    <option value="day">दिनवार</option>
+                    <option value="month">मासिक</option>
+                    <option value="year">वार्षिक</option>
+                </select>
+                <select id="methodFilter">
+                    <option value="all">सब</option>
+                    <option value="cash">नकद</option>
+                    <option value="account">खाता</option>
+                </select>
+                <button type="button" class="btn btn-ghost" id="logoutBtn">लॉग आउट</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <div class="balances">
+            <div class="balance-item"><h3>नकद</h3><p id="cashAmt">₹ 0.00</p></div>
+            <div class="balance-item"><h3>खाता</h3><p id="acctAmt">₹ 0.00</p></div>
+            <div class="balance-item"><h3>कुल</h3><p id="totalAmt">₹ 0.00</p></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>नया एंट्री</h3>
+        <form id="addForm">
+            <input type="hidden" name="action" value="add">
+            <div class="row">
+                <div style="flex:1 1 140px"><label>प्रकार</label><select name="type" id="typeField"><option value="income">जमा</option><option value="expense">खर्च</option></select></div>
+                <div style="flex:1 1 140px"><label>रकम (₹)</label><input type="text" name="amount" id="amount" placeholder="1000" required></div>
+                <div style="flex:1 1 140px"><label>माध्यम</label><select name="method" id="methodField"><option value="cash">नकद</option><option value="account">खाता</option></select></div>
+                <div style="flex:1 1 160px"><label>तिथि</label><input type="date" name="date" id="dateField" value=""></div>
+            </div>
+            <div style="margin-top:8px"><label>विवरण</label><textarea name="description" id="descField" rows="2"></textarea></div>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" type="submit">सहेजें</button><button class="btn btn-ghost" type="button" id="resetBtn">रीसेट</button></div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            <h3>सभी एंट्री</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+                <button class="btn btn-danger" id="clearAllBtn">सभी एंट्री हटाएँ</button>
+                <button class="btn btn-ghost" id="exportCsvBtn">CSV एक्सपोर्ट</button>
+                <button class="btn btn-primary" id="exportPdfBtn">PDF एक्सपोर्ट</button>
+            </div>
+        </div>
+
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+            <form id="rangeForm" class="filter-form" style="display:flex;gap:8px;align-items:center">
+                <input type="hidden" id="currentView" value="list">
+                <div class="input-inline"><label class="small muted">से</label><input type="date" id="fromDate"></div>
+                <div class="input-inline"><label class="small muted">तक</label><input type="date" id="toDate"></div>
+                <button class="btn btn-primary" type="button" id="applyFilter">लागू करें</button>
+                <button class="btn btn-ghost" type="button" id="resetFilter">रीसेट</button>
+            </form>
+        </div>
+
+        <div class="table-wrapper" id="tableWrapper">
+            <!-- table injected by JS -->
+        </div>
+
+        <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+            <div class="muted small" id="openingText">Opening: ₹ 0.00</div>
+            <div class="muted small" id="closingText">Closing: ₹ 0.00</div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+            <button class="btn btn-ghost" id="downloadData">Download data.json</button>
+            <button class="btn btn-ghost" id="downloadRemoved">Download removed.json</button>
+            <label class="btn btn-ghost" style="cursor:pointer"><input type="file" id="uploadData" style="display:none"> Upload data.json</label>
+            <label class="btn btn-ghost" style="cursor:pointer"><input type="file" id="uploadRemoved" style="display:none"> Upload removed.json</label>
+        </div>
+    </div>
+
+</div>
+
+<!-- hidden templates -->
+<template id="tableTemplate">
+<table class="table-small"><thead><tr><th class="date">तिथि</th><th>प्रकार</th><th>माध्यम</th><th>विवरण</th><th class="right">रक्म</th><th class="right">बैलेंस</th><th></th></tr></thead><tbody></tbody></table>
+</template>
+
+<!-- login overlay (client-side) -->
+<div id="loginOverlay" style="display:none"><div class="login-box"><h2>प्रशासक लॉगिन</h2><label>पासवर्ड</label><input type="password" id="loginPass"><button id="loginBtn">लॉगिन</button><div class="login-info">App locked. Password stored inside code. बदल दें production से पहले।</div></div></div>
+
+<script>
+// --- Config ---
+const ADMIN_PASSWORD = '1995'; // change before production
+const STORAGE_KEY = 'gh_entries_v1';
+const REMOVED_KEY = 'gh_removed_v1';
+
+// --- Utilities ---
+function uid(){ return Math.random().toString(16).slice(2,18); }
+function safeH(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function formatDDMMYYYYCompact(d){ if(!d) return ''; const t=Date.parse(d); if(isNaN(t)) return d; const dt=new Date(t); const dd=('0'+dt.getDate()).slice(-2); const mm=('0'+(dt.getMonth()+1)).slice(-2); const yyyy=dt.getFullYear(); return dd+''+mm+''+yyyy; }
+
+// --- Data handling ---
+let entries = loadJSON(STORAGE_KEY) || [];
+let removed = loadJSON(REMOVED_KEY) || [];
+let loggedIn = !!localStorage.getItem('gh_logged_in');
+
+function loadJSON(key){ try{ const raw=localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }catch(e){return [];} }
+function saveJSON(key,val){ localStorage.setItem(key, JSON.stringify(val)); }
+function downloadFile(filename, content){ const a=document.createElement('a'); const blob=new Blob([content],{type:'application/json;charset=utf-8'}); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); }
+
+function appendRemoved(entry, actionBy){ removed.push({removed_at: new Date().toISOString(), by: actionBy, entry}); saveJSON(REMOVED_KEY, removed); }
+
+// --- Auth ---
+const loginOverlay = document.getElementById('loginOverlay');
+function requireLogin(){ if(!loggedIn){ loginOverlay.style.display='flex'; } else { loginOverlay.style.display='none'; } }
+requireLogin();
+document.getElementById('loginBtn').addEventListener('click', ()=>{
+    const v=document.getElementById('loginPass').value||'';
+    if(v===ADMIN_PASSWORD){ loggedIn=true; localStorage.setItem('gh_logged_in','1'); loginOverlay.style.display='none'; renderAll(); } else { alert('गलत पासवर्ड'); }
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{ localStorage.removeItem('gh_logged_in'); loggedIn=false; requireLogin(); });
+
+// --- Initialization ---
+(function(){ if(!document.getElementById('dateField').value){ const d=new Date(); document.getElementById('dateField').value = d.toISOString().slice(0,10); } renderAll(); })();
+
+// --- Form handlers ---
+document.getElementById('addForm').addEventListener('submit', function(e){ e.preventDefault(); if(!validateAdd()) return; const type=document.getElementById('typeField').value; const amountRaw=document.getElementById('amount').value.trim().replace(/,/g,''); const amount=parseFloat(amountRaw)||0; const method=document.getElementById('methodField').value; const date=document.getElementById('dateField').value || new Date().toISOString().slice(0,10); const desc=document.getElementById('descField').value.trim(); if(amount>0){ const obj={id:uid(), type:type, amount:Math.round(amount*100)/100, method:method, date:date, description:desc}; entries.push(obj); saveJSON(STORAGE_KEY, entries); clearAddForm(); renderAll(); } });
+
+function validateAdd(){ const amt=document.getElementById('amount').value.trim(); if(!amt || isNaN(amt.replace(/,/g,''))){ alert('कृपया मान्य रकम दर्ज करें'); return false;} return true; }
+function clearAddForm(){ document.getElementById('amount').value=''; document.getElementById('descField').value=''; document.getElementById('typeField').value='income'; document.getElementById('methodField').value='cash'; document.getElementById('dateField').value = new Date().toISOString().slice(0,10); }
+document.getElementById('resetBtn').addEventListener('click', clearAddForm);
+
+// Clear all
+document.getElementById('clearAllBtn').addEventListener('click', function(){ if(!confirm('सभी साफ़ करना तय है?')) return; entries.forEach(e=>appendRemoved(e,'admin-clear-all')); entries=[]; saveJSON(STORAGE_KEY, entries); renderAll(); });
+
+// Export CSV
+document.getElementById('exportCsvBtn').addEventListener('click', function(){ const rows=collectTableRows(); const csv = buildCSV(rows); const blob=new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='report.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ a.remove(); URL.revokeObjectURL(a.href); },500); });
+
+function buildCSV(rows){ const lines=[]; lines.push(['Date','Type','Method','Description','Amount','Balance'].map(f=>`"${f.replace(/"/g,'""')}"`).join(',')); rows.forEach(r=>{ lines.push([r.date,r.type,r.method,r.description,r.amount,r.balance||''].map(f=>`"${String(f).replace(/"/g,'""')}"`).join(',')); }); return lines.join('\n'); }
+
+// Export PDF (print)
+document.getElementById('exportPdfBtn').addEventListener('click', function(){ const rows=collectTableRows(); const opening=document.getElementById('openingText').innerText; const closing=document.getElementById('closingText').innerText; let html='<!doctype html><html><head><meta charset="utf-8"><title>Report</title><style>body{font-family:Arial,Helvetica,sans-serif;color:#111}table{width:100%;border-collapse:collapse}th,td{padding:8px;border:1px solid #ddd;text-align:left}th{background:#f4f4f4}</style></head><body>'; html += '<h2>रिपोर्ट - घर लेखा-जोखा</h2>'; html += '<div>'+opening+'</div>'; html += '<table><thead><tr><th>तिथि</th><th>प्रकार</th><th>माध्यम</th><th>विवरण</th><th>रक्म</th><th>बैलेंस</th></tr></thead><tbody>'; rows.forEach(r=>{ html += '<tr><td>'+escapeHtml(r.date)+'</td><td>'+escapeHtml(r.type)+'</td><td>'+escapeHtml(r.method)+'</td><td>'+escapeHtml(r.description)+'</td><td>'+escapeHtml(r.amount)+'</td><td>'+escapeHtml(r.balance||'')+'</td></tr>'; }); html += '</tbody></table><div style="margin-top:12px;font-weight:700">'+closing+'</div>'; html += '<div style="margin-top:20px;font-size:0.9em;color:#444">Generated: '+new Date().toLocaleString()+'</div>'; html += '</body></html>'; const w=window.open('','_blank'); w.document.open(); w.document.write(html); w.document.close(); setTimeout(()=>{ w.print(); },600); });
+
+function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Collect visible rows from current rendered table (used for exports)
+function collectTableRows(){ const rows=[]; const tbody = document.querySelector('#tableWrapper table tbody'); if(!tbody) return rows; const trs = tbody.querySelectorAll('tr'); trs.forEach(tr=>{ const tds=tr.querySelectorAll('td'); if(tds.length>=6){ rows.push({ date: tds[0].innerText.trim(), type: tds[1].innerText.trim(), method: tds[2].innerText.trim(), description: tds[3].innerText.trim(), amount: tds[4].innerText.trim(), balance: tds[5].innerText.trim() }); } }); return rows; }
+
+// Download/upload JSON
+document.getElementById('downloadData').addEventListener('click', ()=>{ downloadFile('data.json', JSON.stringify(entries, null, 2)); });
+document.getElementById('downloadRemoved').addEventListener('click', ()=>{ downloadFile('removed.json', JSON.stringify(removed, null, 2)); });
+
+document.getElementById('uploadData').addEventListener('change', function(e){ const f=this.files[0]; if(!f) return; const r=new FileReader(); r.onload=function(){ try{ const parsed=JSON.parse(r.result); if(Array.isArray(parsed)){ if(confirm('Replace current data with uploaded data?')){ entries=parsed; saveJSON(STORAGE_KEY, entries); renderAll(); alert('Imported'); } } else alert('Invalid JSON - must be an array'); }catch(ex){ alert('Invalid JSON file'); } }; r.readAsText(f); this.value=''; });
+
+document.getElementById('uploadRemoved').addEventListener('change', function(e){ const f=this.files[0]; if(!f) return; const r=new FileReader(); r.onload=function(){ try{ const parsed=JSON.parse(r.result); if(Array.isArray(parsed)){ if(confirm('Replace removed.json with uploaded file?')){ removed=parsed; saveJSON(REMOVED_KEY, removed); renderAll(); alert('Imported'); } } else alert('Invalid JSON - must be an array'); }catch(ex){ alert('Invalid JSON file'); } }; r.readAsText(f); this.value=''; });
+
+// Filters and rendering
+function renderAll(){ if(!loggedIn){ document.getElementById('tableWrapper').innerHTML=''; document.getElementById('cashAmt').innerText='₹ 0.00'; document.getElementById('acctAmt').innerText='₹ 0.00'; document.getElementById('totalAmt').innerText='₹ 0.00'; return; }
+    const view=document.getElementById('viewSelect').value; const methodFilter=document.getElementById('methodFilter').value; const from=document.getElementById('fromDate').value; const to=document.getElementById('toDate').value;
+    // filter
+    let filtered = entries.filter(e=>{ if(methodFilter!=='all' && e.method!==methodFilter) return false; if(from && e.date < from) return false; if(to && e.date > to) return false; return true; });
+    // sort desc by date+id
+    filtered.sort((a,b)=> (b.date+b.id).localeCompare(a.date+a.id));
+    // compute opening balances (before from)
+    let opening_cash=0, opening_account=0; if(from){ entries.forEach(e=>{ if(e.date < from){ const amt=Number(e.amount)||0; if(e.type==='income'){ if(e.method==='cash') opening_cash += amt; else opening_account += amt; } else { if(e.method==='cash') opening_cash -= amt; else opening_account -= amt; } } }); }
+    let opening_total = opening_cash + opening_account;
+    // compute running balances ascending
+    const asc = filtered.slice().sort((a,b)=> (a.date+a.id).localeCompare(b.date+b.id)); let balance = opening_total; const running = asc.map(e=>{ if(e.type==='income') balance += Number(e.amount); else balance -= Number(e.amount); return Object.assign({}, e, {balance: Math.round(balance*100)/100}); });
+    const closing_total = balance;
+    // group by date desc
+    const grouped = {}; running.forEach(r=>{ const d=r.date; if(!grouped[d]) grouped[d] = {rows:[], income:0, expense:0}; grouped[d].rows.push(r); if(r.type==='income') grouped[d].income += Number(r.amount); else grouped[d].expense += Number(r.amount); });
+    // render balances (overall, ignoring filters like from?) We'll show current totals across all entries
+    let cash=0, account=0; entries.forEach(e=>{ const amt=Number(e.amount)||0; if(e.type==='income'){ if(e.method==='cash') cash += amt; else account += amt; } else { if(e.method==='cash') cash -= amt; else account -= amt; } });
+    document.getElementById('cashAmt').innerText = '₹ '+cash.toFixed(2);
+    document.getElementById('acctAmt').innerText = '₹ '+account.toFixed(2);
+    document.getElementById('totalAmt').innerText = '₹ '+(cash+account).toFixed(2);
+
+    // render table according to view
+    const wrapper = document.getElementById('tableWrapper'); wrapper.innerHTML='';
+    if(view==='list'){
+        const keys = Object.keys(grouped).sort().reverse();
+        if(keys.length===0){ wrapper.innerHTML = '<p class="muted">कोई एंट्री नहीं</p>'; }
+        else{
+            const tpl = document.getElementById('tableTemplate'); const table = tpl.content.cloneNode(true); const tbody = table.querySelector('tbody');
+            keys.forEach(date=>{ grouped[date].rows.forEach(e=>{
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td class="date">'+safeH(formatDDMMYYYYCompact(e.date))+'</td>'+
+                               '<td>'+safeH(e.type==='income'? 'जमा' : 'खर्च')+'</td>'+
+                               '<td>'+safeH((e.method||'').charAt(0).toUpperCase()+ (e.method||'').slice(1))+'</td>'+
+                               '<td class="description"><div class="clamp-2">'+safeH(e.description)+'</div></td>'+
+                               '<td class="right amount '+(e.type==='income'?'amt-income':'amt-expense')+'">'+(e.type==='income'?'+ ':'- ')+Number(e.amount).toFixed(2)+'</td>'+
+                               '<td class="right">₹ '+Number(e.balance).toFixed(2)+'</td>';
+                const tdForm = document.createElement('td'); tdForm.className='small';
+                const form = document.createElement('form'); form.style.display='inline';
+                const delBtn = document.createElement('button'); delBtn.className='btn btn-ghost'; delBtn.type='button'; delBtn.innerText='हटाएँ';
+                delBtn.addEventListener('click', ()=>{ if(confirm('क्या हटाना चाहेंगे?')){ // find and remove from entries
+                    const idx = entries.findIndex(x=>x.id===e.id); if(idx!==-1){ appendRemoved(entries[idx],'admin'); entries.splice(idx,1); saveJSON(STORAGE_KEY, entries); renderAll(); } } });
+                form.appendChild(delBtn); tdForm.appendChild(form);
+                tr.appendChild(tdForm);
+                tbody.appendChild(tr);
+            }); });
+            wrapper.appendChild(table);
+        }
+    } else if(view==='day' || view==='month' || view==='year'){
+        const report = {}; Object.keys(grouped).forEach(d=>{ let key=d; if(view==='month') key = d.slice(0,7); if(view==='year') key = d.slice(0,4); if(!report[key]) report[key]={rows:[],income:0,expense:0}; report[key].rows = report[key].rows.concat(grouped[d].rows); report[key].income += grouped[d].income; report[key].expense += grouped[d].expense; });
+        const keys = Object.keys(report).sort().reverse(); if(keys.length===0){ wrapper.innerHTML = '<p class="muted">कोई एंट्री नहीं</p>'; } else { keys.forEach(k=>{ const card = document.createElement('div'); card.className='card'; card.style.marginTop='10px'; card.style.padding='10px'; card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>'+safeH(k)+'</strong><div class="muted small">'+report[k].rows.length+' एंट्री</div></div><div style="text-align:right"><div class="pill amt-income">+ ₹ '+Number(report[k].income).toFixed(2)+'</div><div style="height:6px"></div><div class="pill amt-expense">- ₹ '+Number(report[k].expense).toFixed(2)+'</div></div></div>';
+            wrapper.appendChild(card); }); }
+    }
+    document.getElementById('openingText').innerText = 'Opening: ₹ '+opening_total.toFixed(2);
+    document.getElementById('closingText').innerHTML = 'Closing: <strong>₹ '+closing_total.toFixed(2)+'</strong>';
+}
+
+// filter events
+document.getElementById('applyFilter').addEventListener('click', ()=>{ renderAll(); });
+document.getElementById('resetFilter').addEventListener('click', ()=>{ document.getElementById('fromDate').value=''; document.getElementById('toDate').value=''; document.getElementById('methodFilter').value='all'; renderAll(); });
+document.getElementById('viewSelect').addEventListener('change', function(){ renderAll(); });
+document.getElementById('methodFilter').addEventListener('change', function(){ renderAll(); });
+
+// Upload/download helpers already wired above
+
+// initial render when logged in
+if(loggedIn) renderAll();
+
+</script>
+</body>
+</html>
